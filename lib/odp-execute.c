@@ -24,6 +24,7 @@
 #include <netinet/ip6.h>
 #include <stdlib.h>
 #include <string.h>
+#include <lib/bpf/ubpf_int.h>
 
 #include "coverage.h"
 #include "dp-packet.h"
@@ -40,6 +41,7 @@
 #include "openvswitch/vlog.h"
 
 VLOG_DEFINE_THIS_MODULE(odp_execute);
+
 COVERAGE_DEFINE(datapath_drop_sample_error);
 COVERAGE_DEFINE(datapath_drop_nsh_decap_error);
 COVERAGE_DEFINE(drop_action_of_pipeline);
@@ -785,6 +787,19 @@ odp_execute_check_pkt_len(void *dp, struct dp_packet *packet, bool steal,
                         dp_execute_action);
 }
 
+static void
+odp_execute_bpf_prog(struct dp_packet *packet, const struct nlattr *action) {
+    const struct ovs_action_execute_bpf_prog *exec_bpf_prog =
+            nl_attr_get(action);
+    struct ubpf_vm *bpf_prog = exec_bpf_prog->vm;
+    if(bpf_prog) {
+        VLOG_INFO("BPF nb_maps: %d", exec_bpf_prog->vm->nb_maps);
+        if(!execute_bpf_prog(packet, bpf_prog)) {
+            dp_packet_delete(packet);
+        }
+    }
+}
+
 static bool
 requires_datapath_assistance(const struct nlattr *a)
 {
@@ -818,6 +833,7 @@ requires_datapath_assistance(const struct nlattr *a)
     case OVS_ACTION_ATTR_CT_CLEAR:
     case OVS_ACTION_ATTR_CHECK_PKT_LEN:
     case OVS_ACTION_ATTR_DROP:
+    case OVS_ACTION_ATTR_EXECUTE_PROG:
         return false;
 
     case OVS_ACTION_ATTR_UNSPEC:
@@ -1067,6 +1083,11 @@ odp_execute_actions(void *dp, struct dp_packet_batch *batch, bool steal,
             dp_packet_delete_batch(batch, steal);
             return;
         }
+        case OVS_ACTION_ATTR_EXECUTE_PROG:
+            DP_PACKET_BATCH_FOR_EACH (i, packet, batch) {
+                odp_execute_bpf_prog(packet, a);
+            }
+            break;
         case OVS_ACTION_ATTR_OUTPUT:
         case OVS_ACTION_ATTR_TUNNEL_PUSH:
         case OVS_ACTION_ATTR_TUNNEL_POP:

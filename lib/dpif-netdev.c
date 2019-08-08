@@ -7477,6 +7477,7 @@ dp_execute_cb(void *aux_, struct dp_packet_batch *packets_,
     case OVS_ACTION_ATTR_CT_CLEAR:
     case OVS_ACTION_ATTR_CHECK_PKT_LEN:
     case OVS_ACTION_ATTR_DROP:
+    case OVS_ACTION_ATTR_EXECUTE_PROG:
     case __OVS_ACTION_ATTR_MAX:
         OVS_NOT_REACHED();
     }
