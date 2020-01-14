@@ -6283,6 +6283,17 @@ OVS_EXCLUDED(ofproto_mutex)
         return error;
     }
 
+    if (msg.prog_id > OFPBPF_MAX) {
+        // TODO: OFPBPF_* should have its own types of errors.
+        return OFPERR_OFPBRC_EPERM;
+    }
+
+    if (ofproto_bpf_prog_exists(ofproto, msg.prog_id)) {
+        VLOG_WARN_RL(&rl,
+                     "The BPF program with given identifier already exists.");
+        return OFPERR_OFPBRC_EPERM;
+    }
+
     struct ubpf_vm *vm = create_ubpf_vm(msg.prog_id);
     if (!load_bpf_prog(vm, msg.file_len, elf_file)) {
         /* Not sure what else to return if the ELF file is malformed. */
@@ -6324,6 +6335,63 @@ OVS_EXCLUDED(ofproto_mutex)
     ubpf_vms_remove(ofproto, vm);
     ovs_mutex_unlock(&ofproto_mutex);
     ubpf_destroy(vm);
+
+    return error;
+}
+
+static int
+put_bpf_show_prog_info(struct ofpbuf *b,
+                          struct ubpf_vm *vm)
+{
+    const struct ofp_header *oh = b->data;
+    struct ol_bpf_show_prog_info *info = ofpbuf_put_zeros(b,
+            sizeof(struct ol_bpf_show_prog_info));
+    info->prog_id = htons(vm->prog_id);
+    info->nb_maps = htons(vm->nb_maps);
+    info->loaded_at = htonll(vm->loaded_at);
+    return 0;
+}
+
+static enum ofperr
+handle_bpf_show_prog(struct ofconn *ofconn, const struct ofp_header *oh)
+{
+    struct ofproto *ofproto = ofconn_get_ofproto(ofconn);
+    enum ofperr error;
+    error = reject_slave_controller(ofconn);
+    if (error) {
+        return error;
+    }
+
+    struct ol_bpf_show_prog_request msg;
+    error = ofputil_decode_bpf_show_prog_request(&msg, oh);
+    if (error) {
+        return error;
+    }
+
+    struct ofpbuf *buf;
+    buf = ofpraw_alloc_reply(OFPRAW_NXT_BPF_SHOW_PROG_REPLY, oh, 0);
+    ofpbuf_put_zeros(buf, sizeof(struct ol_bpf_show_prog_reply));
+    struct ol_bpf_show_prog_reply *reply = buf->msg;
+    reply->prog_id = htons(msg.prog_id);
+    if (msg.prog_id != OFPBPF_ALL) {
+        struct ubpf_vm *vm = ofproto_get_ubpf_vm(ofproto, msg.prog_id);
+        if (!vm) {
+            VLOG_WARN_RL(&rl,
+                         "The referenced BPF program could not be found.");
+            return OFPERR_OFPBRC_EPERM;
+        }
+        put_bpf_show_prog_info(buf, vm);
+        reply->nb_progs = htons(1);
+
+    } else {
+        struct ubpf_vm *vm = NULL;
+        HMAP_FOR_EACH (vm, hmap_node, &ofproto->ubpf_vms) {
+            put_bpf_show_prog_info(buf, vm);
+        }
+        reply->nb_progs = htons(hmap_count(&ofproto->ubpf_vms));
+    }
+
+    ofconn_send_reply(ofconn, buf);
 
     return error;
 }
@@ -6402,7 +6470,6 @@ handle_dump_map (struct ofconn *ofconn, const struct ofp_header *oh)
     struct ol_bpf_dump_map_request msg;
     const ovs_be16 *maps;
     error = ofputil_decode_bpf_dump_map_request(&msg, &maps, oh);
-
     if (error) {
         return error;
     }
@@ -8816,6 +8883,9 @@ handle_single_part_openflow(struct ofconn *ofconn, const struct ofp_header *oh,
 
     case OFPTYPE_BPF_UNLOAD_PROG:
         return handle_bpf_unload_prog(ofconn, oh);
+
+    case OFPTYPE_BPF_SHOW_PROG_REQUEST:
+        return handle_bpf_show_prog(ofconn, oh);
 
     case OFPTYPE_BPF_UPDATE_MAP:
         return handle_bpf_update_map(ofconn, oh);

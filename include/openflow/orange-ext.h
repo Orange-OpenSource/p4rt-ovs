@@ -19,6 +19,12 @@
 #include "openflow/openflow.h"
 #include "openvswitch/types.h"
 
+/* BPF programs numbering. The BPF programs can use any number up to OFPBPF_MAX. */
+enum ofp_bpf_prog {
+    OFPBPF_MAX = 0xfffe,
+    OFPBPF_ALL = 0xffff,
+};
+
 
 /* BPF_LOAD_PROG.
  *
@@ -47,10 +53,40 @@ OFP_ASSERT(sizeof(struct ol_bpf_load_prog) == 8);
  * OpenFlow rules can then reference these uBPF VMs by the BPF program id.
  */
 struct ol_bpf_unload_prog {
-    ovs_be16 prog;  /* BPF program ID. */
+    ovs_be16 prog;         /* BPF program ID. */
     uint8_t pad[2];        /* Align to 64-bits. */
 };
 OFP_ASSERT(sizeof(struct ol_bpf_unload_prog) == 4);
+
+/*
+ * BPF_SHOW_PROG_REQUEST.
+ *
+ */
+struct ol_bpf_show_prog_request {
+    ovs_be16 prog_id;  /* BPF program ID. 0xffff indicates all BPF programs. */
+    uint8_t pad[2];    /* Align to 32-bits. */
+};
+OFP_ASSERT(sizeof(struct ol_bpf_show_prog_request) == 4);
+
+/*
+ * BPF_SHOW_PROG_REPLY.
+ */
+struct ol_bpf_show_prog_reply {
+    ovs_be16 prog_id;  /* BPF program ID. All BPF programs if OFPBPF_ALL. */
+    ovs_be16 nb_progs; /* Number of BPF programs. */
+};
+OFP_ASSERT(sizeof(struct ol_bpf_show_prog_reply) == 4);
+
+/*
+ * BPF_SHOW_PROG.
+ */
+struct ol_bpf_show_prog_info {
+    ovs_be16 prog_id;
+    ovs_be16 nb_maps;
+    uint8_t pad[4]; /* Align to 64-bits. */
+    ovs_be64 loaded_at;
+};
+OFP_ASSERT(sizeof(struct ol_bpf_show_prog_info) == 16);
 
 /*
  * BPF_UPDATE_MAP.

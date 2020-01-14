@@ -211,8 +211,12 @@ enum ofpraw {
     OFPRAW_NXT_BPF_DUMP_MAP_REQUEST,
     /* NXT 1.0+ (36): struct ol_bpf_dump_map_reply, uint8_t[]. */
     OFPRAW_NXT_BPF_DUMP_MAP_REPLY,
-    /*NXT 1.0+ (37): struct ol_bpf_delete_map, uint8_t[].*/
+    /* NXT 1.0+ (37): struct ol_bpf_delete_map, uint8_t[].*/
     OFPRAW_NXT_BPF_DELETE_MAP,
+    /* NXT 1.0+ (38): struct ol_bpf_show_prog_request, uint8_t[]. */
+    OFPRAW_NXT_BPF_SHOW_PROG_REQUEST,
+    /* NXT 1.0+ (39): struct ol_bpf_show_prog_reply, uint8_t[]. */
+    OFPRAW_NXT_BPF_SHOW_PROG_REPLY,
 
     /* OFPT 1.0 (15): struct ofp10_port_mod. */
     OFPRAW_OFPT10_PORT_MOD,
@@ -782,6 +786,8 @@ enum ofptype {
     /* Orange extension. */
     OFPTYPE_BPF_LOAD_PROG,         /* OFPRAW_NXT_BPF_LOAD_PROG. */
     OFPTYPE_BPF_UNLOAD_PROG,       /* OFPRAW_NXT_BPF_UNLOAD_PROG. */
+    OFPTYPE_BPF_SHOW_PROG_REQUEST, /* OFPRAW_NXT_BPF_SHOW_PROG_REQUEST. */
+    OFPTYPE_BPF_SHOW_PROG_REPLY,   /* OFPRAW_NXT_BPF_SHOW_PROG_REPLY. */
     OFPTYPE_BPF_UPDATE_MAP,        /* OFPRAW_NXT_BPF_UPDATE_MAP. */
     OFPTYPE_BPF_DUMP_MAP_REQUEST,  /* OFPRAW_NXT_BPF_DUMP_MAP_REQUEST. */
     OFPTYPE_BPF_DUMP_MAP_REPLY,    /* OFPRAW_NXT_BPF_DUMP_MAP_REPLY. */

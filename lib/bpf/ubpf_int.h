@@ -105,6 +105,7 @@ struct ubpf_vm {
     struct ubpf_map **ext_maps;
     const char **ext_map_names;
     uint16_t nb_maps;
+    unsigned long long int loaded_at;
 };
 
 char *ubpf_error(const char *fmt, ...);

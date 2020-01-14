@@ -22,6 +22,7 @@
 #include <stdarg.h>
 #include <inttypes.h>
 #include <sys/mman.h>
+#include <timeval.h>
 #include "ubpf_int.h"
 #include <config.h>
 #include "openvswitch/list.h"
@@ -230,6 +231,8 @@ ubpf_load(struct ubpf_vm *vm, const void *code, uint32_t code_len, char **errmsg
 
     memcpy(vm->insts, code, code_len);
     vm->num_insts = code_len/sizeof(vm->insts[0]);
+
+    vm->loaded_at = (unsigned long long int) time_wall_msec();
 
     return 0;
 }
