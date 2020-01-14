@@ -15,6 +15,7 @@
  */
 
 #include <config.h>
+#include "byte-order.h"
 #include <inttypes.h>
 #include "openvswitch/ofp-bpf.h"
 #include "openflow/orange-ext.h"
@@ -114,6 +115,47 @@ struct ofpbuf *ofputil_encode_bpf_unload_prog(enum ofp_version ofp_version,
     return request;
 }
 
+struct ofpbuf *
+ofputil_encode_bpf_show_prog_request(enum ofp_version ofp_version,
+                                     const ovs_be16 prog_id)
+{
+    struct ofpbuf *request;
+    struct ol_bpf_show_prog_request *msg;
+
+    request = ofpraw_alloc(OFPRAW_NXT_BPF_SHOW_PROG_REQUEST, ofp_version, 0);
+    ofpbuf_put_zeros(request, sizeof *msg);
+
+    msg = request->msg;
+    msg->prog_id = htons(prog_id);
+
+    return request;
+}
+
+enum ofperr
+ofputil_decode_bpf_show_prog_request(struct ol_bpf_show_prog_request *msg,
+                                     const struct ofp_header *oh)
+{
+    enum ofperr error = 0;
+
+    struct ofpbuf b = ofpbuf_const_initializer(oh, ntohs(oh->length));
+    enum ofpraw raw = ofpraw_pull_assert(&b);
+    if (raw != OFPRAW_NXT_BPF_SHOW_PROG_REQUEST) {
+        return OFPERR_OFPBMC_BAD_TYPE;
+    }
+
+    struct ol_bpf_show_prog_request *buffer = ofpbuf_pull(&b,
+            sizeof(struct ol_bpf_show_prog_request));
+
+    msg->prog_id = ntohs(buffer->prog_id);
+    if (!msg->prog_id) {
+        VLOG_WARN_RL(&rl,
+                     "The BPF program identifier is not provided.");
+        return OFPERR_OFPBRC_EPERM;
+    }
+
+    return error;
+}
+
 enum ofperr
 ofputil_decode_bpf_update_map(struct ol_bpf_update_map *msg,
                               void **data, const struct ofp_header *oh)
@@ -137,7 +179,7 @@ ofputil_decode_bpf_update_map(struct ol_bpf_update_map *msg,
 
     if(!msg->prog_id) {
         VLOG_WARN_RL(&rl,
-                     "The filter program identifier is not provided.");
+                     "The BPF program identifier is not provided.");
         return OFPERR_OFPBRC_EPERM;
     }
 
@@ -250,11 +292,11 @@ ofputil_encode_bpf_dump_map_request(enum ofp_version ofp_version,
 
 struct ofpbuf *
 ofputil_encode_bpf_dump_map_reply(struct ol_bpf_dump_map_request *msg,
-                              const struct ofp_header *oh,
-                              const struct ubpf_map **map,
-                              const ovs_be16 *maps,
-                              void **data,
-                              unsigned int *nb_elems)
+                                  const struct ofp_header *oh,
+                                  const struct ubpf_map **map,
+                                  const ovs_be16 *maps,
+                                  void **data,
+                                  unsigned int *nb_elems)
 {
     struct ofpbuf *output_buffer;
     struct ol_bpf_dump_map_reply *dump_map_reply;

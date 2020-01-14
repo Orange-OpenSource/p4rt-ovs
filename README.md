@@ -140,6 +140,11 @@ $ p4c-ubpf -o tunneling.c tunneling.p4
 $ clang-6.0 -O2 -target bpf -c tunneling.c -o /tmp/tunneling.o
 # Load compiled program to OVS
 $ ovs-ofctl load-bpf-prog br0 1 /tmp/tunneling.o
+$ ovs-ofctl show-bpf-prog br0 1
+NXT_BPF_SHOW_PROG_REPLY (xid=0x4):
+The number of BPF programs already loaded: 1
+id 2:   loaded_at=2020-02-19 T13:00:52 
+    map_ids 0,1
 # Setup rules to forward traffic (bidirectional). By default, the BPF program will pass all packets.
 $ ovs-ofctl add-flow br0 in_port=2,actions=prog:1,output:1
 $ ovs-ofctl add-flow br0 in_port=1,actions=prog:1,output:2
@@ -162,6 +167,9 @@ NXT_DUMP_MAP_REPLY (xid=0x4):
 The map contains 0 element(s)
 # Unload the P4 program from OVS:
 $ ovs-ofctl unload-bpf-prog 1 1
+$ ovs-ofctl show-bpf-prog br0
+NXT_BPF_SHOW_PROG_REPLY (xid=0x4):
+The number of BPF programs already loaded: 0
 ```
 
 #### Mininet

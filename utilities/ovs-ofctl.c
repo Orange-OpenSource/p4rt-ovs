@@ -5013,6 +5013,34 @@ ofctl_load_bpf_prog(struct ovs_cmdl_context *ctx)
 }
 
 static void
+ofctl_show_bpf_prog(struct ovs_cmdl_context *ctx)
+{
+    struct ofpbuf *request;
+    struct ofpbuf *reply;
+    struct vconn *vconn;
+    enum ofputil_protocol protocol;
+    enum ofputil_protocol usable_protocols = OFPUTIL_P_OF13_UP | OFPUTIL_P_OF10_NXM;
+    enum ofp_version version;
+
+    const char *bridge = ctx->argv[1];
+    const ovs_be16 prog = ctx->argv[2] ? atoi(ctx->argv[2]) : OFPBPF_ALL;
+
+    protocol = open_vconn_for_flow_mod(bridge, &vconn, usable_protocols);
+    version = ofputil_protocol_to_ofp_version(protocol);
+    request = ofputil_encode_bpf_show_prog_request(version, prog);
+
+    run(vconn_transact(vconn, request, &reply), "talking to %s",
+        vconn_get_name(vconn));
+
+    ofp_print(stdout, reply->data, reply->size, NULL, NULL, false);
+
+    ofpbuf_delete(reply);
+
+    vconn_close(vconn);
+
+}
+
+static void
 ofctl_unload_bpf_prog(struct ovs_cmdl_context *ctx)
 {
     struct ofpbuf *request;
@@ -5383,6 +5411,7 @@ static const struct ovs_cmdl_command all_commands[] = {
 
     { "load-bpf-prog", "id file [length]", 2, 3, ofctl_load_bpf_prog, OVS_RW },
     { "unload-bpf-prog", "switch prog", 2, 2, ofctl_unload_bpf_prog, OVS_RW },
+    { "show-bpf-prog", "switch", 1, 2, ofctl_show_bpf_prog, OVS_RW },
     { "update-bpf-map", "switch prog_id map_id key [key] value [value]",
       7, INT_MAX, ofctl_update_bpf_map, OVS_RW },
     { "dump-bpf-map", "switch prog map [hex]", 3, 4, ofctl_dump_bpf_map },
