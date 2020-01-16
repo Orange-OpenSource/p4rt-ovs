@@ -493,7 +493,6 @@ pop_nsh(struct dp_packet *packet)
 bool
 execute_bpf_prog(struct dp_packet *packet, struct ubpf_vm *vm)
 {
-    VLOG_INFO("Execute BPF prog %d.", vm->prog_id);
     return run_bpf_prog(packet, vm);
 }
 
