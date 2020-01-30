@@ -38,10 +38,9 @@ ubpf_is_empty(struct ubpf_vm *vm)
 static inline bpf_result
 ubpf_handle_packet(struct ubpf_vm *vm, struct dp_packet *packet)
 {
-    char *mem = (char *) dp_packet_data(packet);
-    size_t mem_len = sizeof(mem);
+    size_t pkt_len = dp_packet_size(packet);
 
-    uint64_t ret = vm->jitted(packet, mem_len);
+    uint64_t ret = vm->jitted(packet, pkt_len);
     return (ret == 1)? BPF_MATCH : BPF_NO_MATCH;
 }
 
