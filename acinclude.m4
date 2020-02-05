@@ -301,6 +301,24 @@ AC_DEFUN([OVS_CHECK_LINUX_AF_XDP], [
   AM_CONDITIONAL([HAVE_AF_XDP], test "$AF_XDP_ENABLE" = true)
 ])
 
+dnl OVS_DISABLE_BPF_VERIFIER
+dnl
+dnl Disable BPF verifier
+AC_DEFUN([OVS_DISABLE_BPF_VERIFIER], [
+  AC_ARG_ENABLE([bpf-verifier],
+               [AC_HELP_STRING([--disable-bpf-verifier], [Disable BPF verifier])],
+               [disable_bpf_verifier=yes], [])
+  AC_MSG_CHECKING([whether BPF verifier is enabled])
+  if test "$disable_bpf_verifier" != yes; then
+    AC_MSG_RESULT([yes])
+    AC_DEFINE([HAVE_BPF_VERIFIER], [1],
+                  [Define to 1 if BPF verifier enabled.])
+  else
+    AC_MSG_RESULT([no])
+  fi
+  AM_CONDITIONAL([HAVE_BPF_VERIFIER], test "disable_bpf_verifier" = no)
+])
+
 dnl OVS_CHECK_DPDK
 dnl
 dnl Configure DPDK source tree
