@@ -222,9 +222,11 @@ ubpf_load(struct ubpf_vm *vm, const void *code, uint32_t code_len, char **errmsg
         return -1;
     }
 
+    #ifdef HAVE_BPF_VERIFIER
     if (!validate(vm, code, code_len/8, errmsg)) {
         return -1;
     }
+    #endif
 
     vm->insts = xmalloc(code_len);
 

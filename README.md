@@ -43,6 +43,14 @@ P4rt-OVS works only with the userspace datapath of OVS. Currently, there are two
 of userspace datapath: DPDK and AF_XDP. We tested P4rt-OVS with both solutions. However, we recommend AF_XDP as a more
 lightweight solution.
 
+**Note!** P4rt-OVS allows to disable BPF verifier, but it is not recommended to do so. Please, use it carefully and only for testing or research purpose.
+If BPF verifier is disabled it is higly recommended to generate data plane programs from the P4 language, because `p4c-ubpf` generates verified programs.
+To disable BPF verifier add `--disable-bpf-verifier` flag to configuration script:
+
+```bash
+./configure --disable-bpf-verifier
+```
+
 ### DPDK
 
 To install P4rt-OVS on top of DPDK, you can follow the usual [guidelines to install Open
