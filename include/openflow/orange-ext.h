@@ -72,8 +72,8 @@ OFP_ASSERT(sizeof(struct ol_bpf_show_prog_request) == 4);
  * BPF_SHOW_PROG_REPLY.
  */
 struct ol_bpf_show_prog_reply {
-    ovs_be16 prog_id;  /* BPF program ID. All BPF programs if OFPBPF_ALL. */
     ovs_be16 nb_progs; /* Number of BPF programs. */
+    uint8_t pad[2];    /* Align to 32-bits. */
 };
 OFP_ASSERT(sizeof(struct ol_bpf_show_prog_reply) == 4);
 

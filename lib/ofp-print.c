@@ -1045,7 +1045,7 @@ ofp_print_bpf_dump_map_reply(struct ds *string, const struct ofp_header *oh, boo
 }
 
 static void
-ofp_print_bpf_show_prog_reply(struct ds *string, const struct ofp_header *oh)
+ofp_print_bpf_show_prog_reply(struct ds *string, const struct ofp_header *oh, int printall)
 {
     struct ofpbuf b = ofpbuf_const_initializer(oh, ntohs(oh->length));
     enum ofpraw raw = ofpraw_pull_assert(&b);
@@ -1055,9 +1055,9 @@ ofp_print_bpf_show_prog_reply(struct ds *string, const struct ofp_header *oh)
     }
 
     struct ol_bpf_show_prog_reply *buf = ofpbuf_pull(&b, sizeof(struct ol_bpf_show_prog_reply));
-    ovs_be16 prog_id = ntohs(buf->prog_id);
+
     ovs_be16 nb_progs = ntohs(buf->nb_progs);
-    if (prog_id == OFPBPF_ALL)
+    if (printall)
         ds_put_format(string, "\nThe number of BPF programs already loaded: %d", nb_progs);
 
     for (int i = 0; i < nb_progs; i++) {
@@ -1320,7 +1320,7 @@ ofp_to_string__(const struct ofp_header *oh,
         break;
 
     case OFPTYPE_BPF_SHOW_PROG_REPLY:
-        ofp_print_bpf_show_prog_reply(string, oh);
+        ofp_print_bpf_show_prog_reply(string, oh, verbosity);
     }
 
 

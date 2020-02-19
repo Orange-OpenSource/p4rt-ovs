@@ -5024,7 +5024,7 @@ ofctl_show_bpf_prog(struct ovs_cmdl_context *ctx)
 
     const char *bridge = ctx->argv[1];
     const ovs_be16 prog = ctx->argv[2] ? atoi(ctx->argv[2]) : OFPBPF_ALL;
-
+    bool printall = true ? prog == OFPBPF_ALL : false;
     protocol = open_vconn_for_flow_mod(bridge, &vconn, usable_protocols);
     version = ofputil_protocol_to_ofp_version(protocol);
     request = ofputil_encode_bpf_show_prog_request(version, prog);
@@ -5032,7 +5032,7 @@ ofctl_show_bpf_prog(struct ovs_cmdl_context *ctx)
     run(vconn_transact(vconn, request, &reply), "talking to %s",
         vconn_get_name(vconn));
 
-    ofp_print(stdout, reply->data, reply->size, NULL, NULL, false);
+    ofp_print(stdout, reply->data, reply->size, NULL, NULL, printall);
 
     ofpbuf_delete(reply);
 
