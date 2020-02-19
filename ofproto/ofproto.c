@@ -6372,7 +6372,6 @@ handle_bpf_show_prog(struct ofconn *ofconn, const struct ofp_header *oh)
     buf = ofpraw_alloc_reply(OFPRAW_NXT_BPF_SHOW_PROG_REPLY, oh, 0);
     ofpbuf_put_zeros(buf, sizeof(struct ol_bpf_show_prog_reply));
     struct ol_bpf_show_prog_reply *reply = buf->msg;
-    reply->prog_id = htons(msg.prog_id);
     if (msg.prog_id != OFPBPF_ALL) {
         struct ubpf_vm *vm = ofproto_get_ubpf_vm(ofproto, msg.prog_id);
         if (!vm) {
@@ -6382,7 +6381,6 @@ handle_bpf_show_prog(struct ofconn *ofconn, const struct ofp_header *oh)
         }
         put_bpf_show_prog_info(buf, vm);
         reply->nb_progs = htons(1);
-
     } else {
         struct ubpf_vm *vm = NULL;
         HMAP_FOR_EACH (vm, hmap_node, &ofproto->ubpf_vms) {
