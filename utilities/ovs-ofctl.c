@@ -5024,7 +5024,7 @@ ofctl_show_bpf_prog(struct ovs_cmdl_context *ctx)
 
     const char *bridge = ctx->argv[1];
     const ovs_be16 prog = ctx->argv[2] ? atoi(ctx->argv[2]) : OFPBPF_ALL;
-    bool printall = true ? prog == OFPBPF_ALL : false;
+    bool printall = prog == OFPBPF_ALL;
     protocol = open_vconn_for_flow_mod(bridge, &vconn, usable_protocols);
     version = ofputil_protocol_to_ofp_version(protocol);
     request = ofputil_encode_bpf_show_prog_request(version, prog);
