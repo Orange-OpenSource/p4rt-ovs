@@ -29,6 +29,7 @@
 #include "compiler.h"
 #include "util.h"
 #include "openvswitch/util.h"
+#include "bpf/ubpf.h"
 #if defined(__aarch64__) && __GNUC__ >= 6
 #include <arm_neon.h>
 #endif
@@ -63,11 +64,19 @@ struct Bad_arg_to_ARRAY_SIZE {
 #define __ARRAY_SIZE(ARRAY) __ARRAY_SIZE_NOCHECK(ARRAY)
 #endif
 
-typedef enum OVS_PACKED_ENUM {
-    BPF_UNKNOWN = 0,
-    BPF_MATCH,
-    BPF_NO_MATCH,
+
+typedef struct {
+    enum ubpf_action action;
+    union {
+        uint32_t output_port; // if action == REDIRECT
+    };
 } bpf_result;
+
+//typedef enum OVS_PACKED_ENUM {
+//    BPF_UNKNOWN = 0,
+//    BPF_MATCH,
+//    BPF_NO_MATCH,
+//} bpf_result;
 
 /* This system's cache line size, in bytes.
  * Being wrong hurts performance but not correctness. */

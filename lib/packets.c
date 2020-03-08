@@ -490,7 +490,7 @@ pop_nsh(struct dp_packet *packet)
     return true;
 }
 
-bool
+bpf_result
 execute_bpf_prog(struct dp_packet *packet, struct ubpf_vm *vm)
 {
     return run_bpf_prog(packet, vm);

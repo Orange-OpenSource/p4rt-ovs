@@ -7134,6 +7134,7 @@ dp_execute_cb(void *aux_, struct dp_packet_batch *packets_,
               const struct nlattr *a, bool should_steal)
     OVS_NO_THREAD_SAFETY_ANALYSIS
 {
+    VLOG_INFO("Executing");
     struct dp_netdev_execute_aux *aux = aux_;
     uint32_t *depth = recirc_depth_get();
     struct dp_netdev_pmd_thread *pmd = aux->pmd;
@@ -7141,19 +7142,22 @@ dp_execute_cb(void *aux_, struct dp_packet_batch *packets_,
     int type = nl_attr_type(a);
     struct tx_port *p;
     uint32_t packet_count, packets_dropped;
-
+    VLOG_INFO("Looking up %d", type);
     switch ((enum ovs_action_attr)type) {
     case OVS_ACTION_ATTR_OUTPUT:
+        VLOG_INFO("Action OUTPUT");
         p = pmd_send_port_cache_lookup(pmd, nl_attr_get_odp_port(a));
+        VLOG_INFO("Port: %d", p->port->port_no);
         if (OVS_LIKELY(p)) {
             struct dp_packet *packet;
             struct dp_packet_batch out;
-
+            VLOG_INFO("Before should steal");
             if (!should_steal) {
                 dp_packet_batch_clone(&out, packets_);
                 dp_packet_batch_reset_cutlen(packets_);
                 packets_ = &out;
             }
+            VLOG_INFO("After should steal");
             dp_packet_batch_apply_cutlen(packets_);
 
 #ifdef DPDK_NETDEV
@@ -7171,7 +7175,7 @@ dp_execute_cb(void *aux_, struct dp_packet_batch *packets_,
                 /* Flush here to avoid overflow. */
                 dp_netdev_pmd_flush_output_on_port(pmd, p);
             }
-
+            VLOG_INFO("Here ");
             if (dp_packet_batch_is_empty(&p->output_pkts)) {
                 pmd->n_output_batches++;
             }
@@ -7181,6 +7185,7 @@ dp_execute_cb(void *aux_, struct dp_packet_batch *packets_,
                                                              pmd->ctx.last_rxq;
                 dp_packet_batch_add(&p->output_pkts, packet);
             }
+            VLOG_INFO("Here 2");
             return;
         } else {
             COVERAGE_ADD(datapath_drop_invalid_port,

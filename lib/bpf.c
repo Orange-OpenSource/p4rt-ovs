@@ -63,6 +63,36 @@ load_bpf_prog(struct ubpf_vm *vm, size_t code_len, char *code)
 
     return true;
 }
+//
+//inline bpf_result
+//ubpf_handle_packet(struct ubpf_vm *vm, struct dp_packet *packet) {
+//    size_t pkt_len = dp_packet_size(packet);
+//    VLOG_INFO("Handling packet.");
+//
+//    VLOG_INFO("Input port = %u.", ofp_to_u16(packet->md.in_port.ofp_port));
+//
+//    return NULL;
+//}
+
+inline bpf_result
+run_bpf_prog(const struct dp_packet *packet, struct ubpf_vm *vm) {
+    size_t pkt_len = dp_packet_size(packet);
+    struct standard_metadata std_meta = {
+            .input_port = ofp_to_u16(packet->md.in_port.ofp_port),
+            .packet_length = pkt_len,
+            .output_action = PASS,
+            .output_port = 0
+    };
+
+    uint64_t ret = vm->jitted(packet, &std_meta);
+
+    bpf_result res = {
+        .action = std_meta.output_action,
+        .output_port = std_meta.output_port
+    };
+
+    return res;
+}
 
 void *
 ubpf_map_lookup(const struct ubpf_map *map, void *key)

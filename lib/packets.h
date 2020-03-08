@@ -456,7 +456,7 @@ void pop_eth(struct dp_packet *packet);
 void push_nsh(struct dp_packet *packet, const struct nsh_hdr *nsh_hdr_src);
 bool pop_nsh(struct dp_packet *packet);
 
-bool execute_bpf_prog(struct dp_packet *packet, struct ubpf_vm *vm);
+bpf_result execute_bpf_prog(struct dp_packet *packet, struct ubpf_vm *vm);
 
 #define LLC_DSAP_SNAP 0xaa
 #define LLC_SSAP_SNAP 0xaa
