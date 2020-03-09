@@ -1678,8 +1678,13 @@ ofproto_destroy__(struct ofproto *ofproto)
         oftable_destroy(table);
     }
     free(ofproto->tables);
-
+    struct ubpf_vm *vm;
+    HMAP_FOR_EACH(vm, hmap_node, &ofproto->ubpf_vms) {
+        ubpf_vms_remove(ofproto, vm);
+        ubpf_destroy(vm);
+    }
     ovs_assert(hmap_is_empty(&ofproto->ubpf_vms));
+    hmap_destroy(&ofproto->ubpf_vms);
 
     hmap_destroy(&ofproto->meters);
 
@@ -4312,11 +4317,13 @@ OVS_REQUIRES(ofproto_mutex)
                 hash_bytes(&vm->prog_id, 2, 0));
 }
 
-static void
+void
 ubpf_vms_remove(struct ofproto *ofproto, struct ubpf_vm *vm)
 OVS_REQUIRES(ofproto_mutex)
 {
+    ovs_mutex_lock(&ofproto_mutex);
     hmap_remove(&ofproto->ubpf_vms, &vm->hmap_node);
+    ovs_mutex_unlock(&ofproto_mutex);
 }
 
 static bool
@@ -6331,9 +6338,7 @@ OVS_EXCLUDED(ofproto_mutex)
         return OFPERR_OFPBRC_EPERM;
     }
 
-    ovs_mutex_lock(&ofproto_mutex);
     ubpf_vms_remove(ofproto, vm);
-    ovs_mutex_unlock(&ofproto_mutex);
     ubpf_destroy(vm);
 
     return error;
